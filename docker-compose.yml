@@ -1,0 +1,45 @@
+services:
+
+  # ── FastAPI backend ──────────────────────────────────────────────────────────
+  api:
+    build: .                          # uses the Dockerfile in this directory
+    restart: unless-stopped
+    ports:
+      - "8000:8000"                   # host:container
+    env_file:
+      - .env                          # loads GROQ_API_KEY etc. from .env
+    volumes:
+      - app_data:/app/data            # SQLite + ChromaDB survive restarts
+      - ./knowledge_base:/app/knowledge_base  # live-reload KB files without rebuild
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s              # give uvicorn time to start before first check
+
+  # ── Streamlit dashboard ──────────────────────────────────────────────────────
+  dashboard:
+    build: .                          # same image, different command
+    restart: unless-stopped
+    command: >
+      streamlit run dashboard.py
+      --server.port 8501
+      --server.address 0.0.0.0
+      --server.headless true
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    environment:
+      # Tell the dashboard where the API is (inside Docker network, use service name)
+      DASHBOARD_API_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy    # wait for API health check to pass first
+
+# ── Named volume ──────────────────────────────────────────────────────────────
+# Stores SQLite DB and ChromaDB files outside the container filesystem
+# so they persist across `docker compose down` and rebuilds.
+volumes:
+  app_data:

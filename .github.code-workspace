@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": ".github"
+		},
+		{
+			"path": "customer_support_agent"
+		},
+		{
+			"path": "docs"
+		},
+		{
+			"path": "knowledge_base"
+		},
+		{
+			"path": "notebooks"
+		},
+		{
+			"path": "tests"
+		}
+	]
+}
