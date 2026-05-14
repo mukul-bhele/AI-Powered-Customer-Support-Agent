@@ -1,15 +1,11 @@
 from customer_support_agent.schemas.api import (
     CustomerMemoriesResponse,
     CustomerMemorySearchResponse,
-    DraftHighlights,
     DraftResponse,
-    DraftSignals,
-    DraftToolCall,
     DraftUpdateRequest,
     GenerateDraftResponse,
     KnowledgeIngestRequest,
     KnowledgeIngestResponse,
-    StructuredDraftContext,
     TicketCreateRequest,
     TicketResponse,
 )
@@ -18,10 +14,6 @@ from customer_support_agent.schemas.api import (
 __all__ = [
     "TicketCreateRequest",
     "TicketResponse",
-    "DraftSignals",
-    "DraftHighlights",
-    "DraftToolCall",
-    "StructuredDraftContext",
     "DraftResponse",
     "DraftUpdateRequest",
     "GenerateDraftResponse",

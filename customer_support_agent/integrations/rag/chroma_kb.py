@@ -16,7 +16,9 @@ import chromadb
 from chromadb.utils import embedding_functions
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from customer_support_agent.core.settings import Settings
+
 class KnowledgeBaseService:
+
     def __init__(self, settings: Settings):
         self._settings = settings
 
@@ -26,10 +28,12 @@ class KnowledgeBaseService:
         # Each embedding model produces vectors in a different space,
         # so we use a separate ChromaDB collection per provider.
         # Mixing embeddings from different models in one collection breaks search.
+
         self._collection_name = "support_kb_openai"
         self._embedding_function = self._build_embedding_function()
 
         # get_or_create → safe to call on every startup
+
         self._collection = self._client.get_or_create_collection(
             name=self._collection_name,
             embedding_function=self._embedding_function,
@@ -54,7 +58,6 @@ class KnowledgeBaseService:
                 api_key=self._settings.openai_api_key,
                 model_name="text-embedding-3-small",
             )
-
     def ingest_directory(self, directory: Path, clear_existing: bool = False) -> dict[str, int]:
         """
         Read all .md and .txt files in `directory`, chunk them, and store in ChromaDB.
@@ -65,13 +68,13 @@ class KnowledgeBaseService:
         Returns:
             Dict with files_indexed, chunks_indexed, and collection_count.
         """
+
         if clear_existing:
             self._client.delete_collection(name=self._collection_name)
             self._collection = self._client.get_or_create_collection(
                 name=self._collection_name,
                 embedding_function=self._embedding_function,
             )
-
         source_files = sorted([*directory.glob("*.md"), *directory.glob("*.txt")])
         docs:      list[str]            = []
         ids:       list[str]            = []
@@ -80,7 +83,6 @@ class KnowledgeBaseService:
         for file_path in source_files:
             text   = file_path.read_text(encoding="utf-8")
             chunks = self._splitter.split_text(text)
-
             for index, chunk in enumerate(chunks):
                 # Include a content hash in the ID so re-ingesting the same
                 # content never creates duplicate entries (upsert is idempotent)
@@ -90,7 +92,6 @@ class KnowledgeBaseService:
                 docs.append(chunk)
                 ids.append(doc_id)
                 metadatas.append({"source": file_path.name, "chunk_index": index})
-
         if docs:
             # upsert = insert-or-update; safe to call multiple times
             self._collection.upsert(documents=docs, ids=ids, metadatas=metadatas)
@@ -99,7 +100,7 @@ class KnowledgeBaseService:
             "chunks_indexed": len(docs),
             "collection_count": self._collection.count(),
         }
-   
+    
     def search(self, query: str, top_k: int | None = None) -> list[dict[str, Any]]:        
         """
         Find the most relevant knowledge base chunks for a query string.

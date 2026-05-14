@@ -2,17 +2,14 @@
 Database foundation module.
 
 Provides:
-  - connect()    → opens a SQLite connection with sane defaults
+  - connect()    → opens a SQLite connection with same defaults
   - row_to_dict  → converts a sqlite3.Row to a plain dict
   - init_db()    → creates all tables and triggers on first run
 """
 from __future__ import annotations
-
 import sqlite3
 from typing import Any
-
 from customer_support_agent.core.settings import ensure_directories, get_settings
-
 
 def connect() -> sqlite3.Connection:
     """
@@ -36,7 +33,7 @@ def row_to_dict(row: sqlite3.Row | None) -> dict[str, Any] | None:
     if row is None:
         return None
     return dict(row)
-    
+ 
 def init_db() -> None:
     """
     Create the database schema on application startup.
@@ -57,7 +54,6 @@ def init_db() -> None:
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 email      TEXT UNIQUE NOT NULL,
                 name       TEXT,
-                company    TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
@@ -73,12 +69,11 @@ def init_db() -> None:
             );
 
             CREATE TABLE IF NOT EXISTS drafts (
-                id           INTEGER PRIMARY KEY AUTOINCREMENT,
-                ticket_id    INTEGER REFERENCES tickets(id),
-                content      TEXT NOT NULL,
-                context_used TEXT,          -- JSON blob: memory/KB/tool signals
-                status       TEXT DEFAULT 'pending',
-                created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                ticket_id  INTEGER REFERENCES tickets(id),
+                content    TEXT NOT NULL,
+                status     TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
             -- Automatically update tickets.updated_at on every UPDATE

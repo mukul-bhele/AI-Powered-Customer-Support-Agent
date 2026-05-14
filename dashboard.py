@@ -282,7 +282,7 @@ if portal == "🙋 Customer Portal":
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Submit Another Complaint", type="primary", use_container_width=True):
-                for k in ["customer_step", "submitted_ticket", "cust_name", "cust_email", "cust_company"]:
+                for k in ["customer_step", "submitted_ticket", "cust_name", "cust_email"]:
                     st.session_state.pop(k, None)
                 st.rerun()
         with col2:
@@ -300,21 +300,16 @@ if portal == "🙋 Customer Portal":
                     placeholder="e.g. Priya Sharma",
                     help="Enter your full name as on bank records",
                 )
+            with c2:
                 email = st.text_input(
                     "Registered Email Address *",
                     placeholder="e.g. priya@gmail.com",
                     help="Use the email linked to your bank account",
                 )
-            with c2:
-                company = st.text_input(
-                    "Company / Organisation",
-                    placeholder="e.g. Tata Consultancy Services (optional)",
-                )
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.markdown(
-                    '<div class="info-strip">📌 Your email is used to look up your account history for faster resolution.</div>',
-                    unsafe_allow_html=True,
-                )
+            st.markdown(
+                '<div class="info-strip">📌 Your email is used to look up your account history for faster resolution.</div>',
+                unsafe_allow_html=True,
+            )
             st.markdown("</div>", unsafe_allow_html=True)
 
             st.markdown("<br>", unsafe_allow_html=True)
@@ -418,12 +413,11 @@ if portal == "🙋 Customer Portal":
                 final_subject = f"[{category}] {subject}" if category != "Select a category…" else subject
                 payload = {
                     "customer_email": email.strip(),
-                    "customer_name": full_name.strip(),
-                    "customer_company": company.strip() or None,
-                    "subject": final_subject,
-                    "description": description.strip(),
-                    "priority": priority,
-                    "auto_generate": True,
+                    "customer_name":  full_name.strip(),
+                    "subject":        final_subject,
+                    "description":    description.strip(),
+                    "priority":       priority,
+                    "auto_generate":  True,
                 }
                 with st.spinner("Submitting your complaint and generating AI response…"):
                     result, err = api("POST", "/api/tickets", json=payload)
@@ -515,8 +509,6 @@ else:
                         st.write(f"**Email:** {ticket['customer_email']}")
                         if ticket.get("customer_name"):
                             st.write(f"**Name:** {ticket['customer_name']}")
-                        if ticket.get("customer_company"):
-                            st.write(f"**Company:** {ticket['customer_company']}")
                         st.markdown("---")
                         st.write(f"**Priority:** {ticket['priority'].upper()}")
                         st.write(f"**Status:** {ticket['status'].upper()}")
@@ -546,19 +538,7 @@ else:
                             st.error(derr)
                         else:
                             draft_id = draft["id"]
-                            ctx      = draft.get("context_used") or {}
-                            signals  = ctx.get("signals") or {}
-
-                            # AI signal metrics
-                            if signals:
-                                m1, m2, m3, m4 = st.columns(4)
-                                m1.metric("Memory Hits",    signals.get("memory_hit_count", 0))
-                                m2.metric("KB Hits",        signals.get("knowledge_hit_count", 0))
-                                m3.metric("Tool Calls",     signals.get("tool_call_count", 0))
-                                m4.metric("Draft Status",   draft.get("status", "—").upper())
-                                sources = signals.get("knowledge_sources") or []
-                                if sources:
-                                    st.caption("📄 Sources: " + " · ".join(sources))
+                            st.caption(f"Status: **{draft.get('status', '—').upper()}**")
 
                             st.markdown("<br>", unsafe_allow_html=True)
 
@@ -607,17 +587,6 @@ else:
                                         st.warning("Discarded.")
                                         st.rerun()
 
-                            # Tool call trace
-                            tool_calls = ctx.get("tool_calls") or []
-                            if tool_calls:
-                                with st.expander("🔧 Tool Call Trace"):
-                                    for tc in tool_calls:
-                                        st.markdown(
-                                            f"**{tc.get('tool_name')}** "
-                                            f"— `{tc.get('status')}`"
-                                        )
-                                        if tc.get("output_text"):
-                                            st.code(tc["output_text"], language="text")
 
     # ══════════════════════════════════════════════════════════════════════
     # TAB 2 — KNOWLEDGE BASE

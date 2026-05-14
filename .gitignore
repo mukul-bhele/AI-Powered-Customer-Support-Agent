@@ -1,7 +1,12 @@
-# Secrets
+# ── Secrets ───────────────────────────────────────────────────────────────────
 .env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
 
-# Python
+# ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.pyc
 *.pyo
@@ -9,21 +14,37 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# Virtual environment
+# ── Virtual environments ──────────────────────────────────────────────────────
 venv/
 .venv/
+env/
 
-# Data & databases (may contain customer data)
+# ── Data & databases (may contain customer data) ──────────────────────────────
 data/
+*.db
+*.sqlite
+*.sqlite3
+chroma_rag/
+chroma_mem0/
 
-# Jupyter checkpoints
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
 notebooks/.ipynb_checkpoints/
 
-# IDE
+# ── IDE ───────────────────────────────────────────────────────────────────────
 .vscode/
 .idea/
+*.swp
 
-# OS
+# ── OS ────────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+desktop.ini

@@ -14,12 +14,10 @@ try:
 except ImportError:
     Memory = None
 
-
 class CustomerMemoryStore:
     def __init__(self, settings: Settings):
         if Memory is None:
             raise RuntimeError("mem0ai is not installed. Run: pip install mem0ai")
-
         config: dict[str, Any] = {
             "llm": {
                 "provider": "groq",
@@ -46,9 +44,7 @@ class CustomerMemoryStore:
                 "No embedding provider configured for Mem0. "
                 "Set OPENAI_API_KEY"
             )
-
         self._memory = Memory.from_config(config)
-
     # ── Read ──────────────────────────────────────────────────────────────────
     def search(self, query: str, user_id: str, limit: int = 5) -> list[dict]:
         """Return the memories most relevant to `query` for this user."""
@@ -90,13 +86,12 @@ class CustomerMemoryStore:
         self._add(messages, user_id=user_id, metadata=metadata)
 
     # ── Private helpers ───────────────────────────────────────────────────────
-
     def _add(self, messages: list[dict], user_id: str, metadata: dict | None = None) -> None:
         try:
             self._memory.add(messages, user_id=user_id, metadata=metadata or {})
         except TypeError:
             self._memory.add(messages, user_id=user_id)  # older mem0 without metadata
-
+ 
     def _to_list(self, raw: Any, limit: int) -> list[dict]:
         """
         Normalise Mem0's varying response shapes into a plain list of dicts.

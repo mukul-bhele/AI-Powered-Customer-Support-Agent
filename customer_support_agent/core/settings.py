@@ -2,12 +2,9 @@
 App configuration — all values come from the .env file.
 """
 from __future__ import annotations
-
 from functools import lru_cache
 from pathlib import Path
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 
 class Settings(BaseSettings):
 
@@ -53,8 +50,6 @@ class Settings(BaseSettings):
     def resolve(self, path: Path) -> Path:
         """Turn a relative path into an absolute one using the project root."""
         return path if path.is_absolute() else self.workspace_dir / path
-
-    # Shortcut properties so callers don't have to call resolve() manually
     @property
     def db_file(self) -> Path:
         return self.resolve(self.db_path)
@@ -71,12 +66,10 @@ class Settings(BaseSettings):
     def knowledge_base_path(self) -> Path:
         return self.resolve(self.knowledge_base_dir)
 
-
 @lru_cache
 def get_settings() -> Settings:
     """Return the cached Settings instance (reads .env only once)."""
     return Settings()
-
 
 def ensure_directories(settings: Settings | None = None) -> None:
     """Create all required local directories if they don't already exist."""

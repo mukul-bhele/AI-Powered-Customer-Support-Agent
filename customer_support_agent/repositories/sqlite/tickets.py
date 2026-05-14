@@ -1,11 +1,11 @@
 """
-Tickets repository.
-All database operations for the `tickets` table.
-Ticket rows are always JOINed with `customers` so that
-customer email/name/company are available without extra queries.
+Tickets repository — all DB operations for the `tickets` table.
+List/get queries always JOIN with `customers` so customer email/name are available.
 """
 from __future__ import annotations
+
 from typing import Any
+
 from customer_support_agent.repositories.sqlite.base import connect, row_to_dict
 
 
@@ -22,16 +22,11 @@ class TicketsRepository:
         """Insert a new ticket and return the full row."""
         with connect() as conn:
             cursor = conn.execute(
-                """
-                INSERT INTO tickets (customer_id, subject, description, priority, status)
-                VALUES (?, ?, ?, ?, ?)
-                """,
+                "INSERT INTO tickets (customer_id, subject, description, priority, status) VALUES (?, ?, ?, ?, ?)",
                 (customer_id, subject, description, priority, status),
             )
             ticket_id = cursor.lastrowid
-            row = conn.execute(
-                "SELECT * FROM tickets WHERE id = ?", (ticket_id,)
-            ).fetchone()
+            row = conn.execute("SELECT * FROM tickets WHERE id = ?", (ticket_id,)).fetchone()
             return row_to_dict(row) or {}
 
     def list(self, limit: int = 100) -> list[dict[str, Any]]:
@@ -39,11 +34,7 @@ class TicketsRepository:
         with connect() as conn:
             rows = conn.execute(
                 """
-                SELECT
-                    t.*,
-                    c.email   AS customer_email,
-                    c.name    AS customer_name,
-                    c.company AS customer_company
+                SELECT t.*, c.email AS customer_email, c.name AS customer_name
                 FROM tickets t
                 JOIN customers c ON c.id = t.customer_id
                 ORDER BY t.created_at DESC
@@ -58,11 +49,7 @@ class TicketsRepository:
         with connect() as conn:
             row = conn.execute(
                 """
-                SELECT
-                    t.*,
-                    c.email   AS customer_email,
-                    c.name    AS customer_name,
-                    c.company AS customer_company
+                SELECT t.*, c.email AS customer_email, c.name AS customer_name
                 FROM tickets t
                 JOIN customers c ON c.id = t.customer_id
                 WHERE t.id = ?
@@ -74,12 +61,8 @@ class TicketsRepository:
     def set_status(self, ticket_id: int, status: str) -> dict[str, Any] | None:
         """Update a ticket's status. updated_at is refreshed automatically by a DB trigger."""
         with connect() as conn:
-            conn.execute(
-                "UPDATE tickets SET status = ? WHERE id = ?", (status, ticket_id)
-            )
-            row = conn.execute(
-                "SELECT * FROM tickets WHERE id = ?", (ticket_id,)
-            ).fetchone()
+            conn.execute("UPDATE tickets SET status = ? WHERE id = ?", (status, ticket_id))
+            row = conn.execute("SELECT * FROM tickets WHERE id = ?", (ticket_id,)).fetchone()
             return row_to_dict(row)
 
     def count_open_for_customer(self, customer_email: str) -> int:

@@ -1,6 +1,5 @@
 """
 Drafts repository.
-
 All database operations for the `drafts` table.
 A draft is the AI-generated reply for a ticket. Multiple drafts
 can exist per ticket (e.g. after regeneration), but only the
@@ -9,36 +8,17 @@ latest one is shown to agents.
 from __future__ import annotations
 from typing import Any
 from customer_support_agent.repositories.sqlite.base import connect, row_to_dict
-
 class DraftsRepository:
-
-    def create(
-        self,
-        ticket_id: int,
-        content: str,
-        context_used: str | None = None,
-        status: str = "pending",
-    ) -> dict[str, Any]:
-        """
-        Store a new draft for a ticket.
-
-        `context_used` is a JSON string containing memory/KB/tool signals
-        that explains how the AI arrived at this draft (used in the UI).
-        """
+    def create(self, ticket_id: int, content: str, status: str = "pending") -> dict[str, Any]:
+        """Store a new draft for a ticket."""
         with connect() as conn:
             cursor = conn.execute(
-                """
-                INSERT INTO drafts (ticket_id, content, context_used, status)
-                VALUES (?, ?, ?, ?)
-                """,
-                (ticket_id, content, context_used, status),
+                "INSERT INTO drafts (ticket_id, content, status) VALUES (?, ?, ?)",
+                (ticket_id, content, status),
             )
-            draft_id = cursor.lastrowid
-            row = conn.execute(
-                "SELECT * FROM drafts WHERE id = ?", (draft_id,)
-            ).fetchone()
+            row = conn.execute("SELECT * FROM drafts WHERE id = ?", (cursor.lastrowid,)).fetchone()
             return row_to_dict(row) or {}
-
+   
     def get_latest_for_ticket(self, ticket_id: int) -> dict[str, Any] | None:
         """
         Return the most recently created draft for a ticket.
@@ -63,6 +43,7 @@ class DraftsRepository:
                 "SELECT * FROM drafts WHERE id = ?", (draft_id,)
             ).fetchone()
             return row_to_dict(row)
+        
     def update(
         self,
         draft_id: int,
@@ -96,7 +77,6 @@ class DraftsRepository:
                 "SELECT * FROM drafts WHERE id = ?", (draft_id,)
             ).fetchone()
             return row_to_dict(row)
-
     def get_ticket_and_customer_by_draft(self, draft_id: int) -> dict[str, Any] | None:
         """
         Fetch ticket + customer details for a given draft in one query.
@@ -108,17 +88,16 @@ class DraftsRepository:
             row = conn.execute(
                 """
                 SELECT
-                    d.id          AS draft_id,
+                    d.id      AS draft_id,
                     d.ticket_id,
-                    d.content     AS draft_content,
-                    d.status      AS draft_status,
+                    d.content AS draft_content,
+                    d.status  AS draft_status,
                     t.subject,
                     t.description,
-                    t.status      AS ticket_status,
-                    c.id          AS customer_id,
-                    c.email       AS customer_email,
-                    c.name        AS customer_name,
-                    c.company     AS customer_company
+                    t.status  AS ticket_status,
+                    c.id      AS customer_id,
+                    c.email   AS customer_email,
+                    c.name    AS customer_name
                 FROM drafts d
                 JOIN tickets  t ON t.id = d.ticket_id
                 JOIN customers c ON c.id = t.customer_id
